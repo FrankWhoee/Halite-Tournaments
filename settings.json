@@ -1,0 +1,18 @@
+{
+	"server": "",
+	"brackets": "imgs/brackets.png",
+	"infos": "infos.txt",
+	"matches": {},
+	"log": "bot.log",
+	"runOut": 125,
+	"submit": false,
+	"token": "",
+	"onTour": false,
+	"season": "2",
+	"timeSub": "APRIL 12 3:30PM GMT",
+	"admins": [
+		"Splinter#4298",
+		"Frank Whoee#1338"
+	],
+	"compileOut": 245
+}
