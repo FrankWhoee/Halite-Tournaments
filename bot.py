@@ -15,7 +15,8 @@ commands = {"!help":"Show this message",
             "!matches":"Print upcoming matches, tag a user after to check his upcoming matches",
             "!submissions":"Check if submissions are opened/closed and when they close/open",
             "!languages":"Check supported languages for submissions, add a language name to know how it's compiled/run e.g. !language python",
-            "!battle":"Run a match between two players, !battle [p1] [p2] [height map] [width map]"}
+            "!battle":"Run a match between two players, !battle [p1] [p2] [height map] [width map]",
+            "!donations":"Get infos about donations"}
 
 adminCommands = {"!subs":"!subs True/False opens or closes submissions",
                  "!brk":"To add as a comment with the brackets image to update it",
@@ -204,8 +205,8 @@ async def on_message(message):
             await client.send_message(message.channel, t)
 
         elif message.content.startswith("!donations"):
-            message = "Donations are used to help support Halite Tournaments. We use your contributions to run our servers and give cash prizes. Donate here: https://www.paypal.me/HaliteTournaments. Donating will give you the **Contributor** role which has access to the Contributors voice channel. More privileges for Contributors will be coming!"
-            await client.send_message(message.channel, message)
+            text = "Donations are used to help support Halite Tournaments. We use your contributions to run our servers and give cash prizes. Donate here: https://www.paypal.me/HaliteTournaments. Donating will give you the **Contributor** role which has access to the Contributors voice channel. More privileges for Contributors will be coming!"
+            await client.send_message(message.channel, text)
         #admin commands
         elif str(message.author) in settings.admins:
             if message.content.startswith("!type"): #make bot type in current channel
