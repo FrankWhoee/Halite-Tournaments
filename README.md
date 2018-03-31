@@ -55,8 +55,6 @@ server! :smile:
 
 ## TODO
 
-- Multi-threading discord bot commands
-- Asyncio timeout in coroutines (big problem right now)
 - Add more languages support
 
 ## Contribute!
