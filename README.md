@@ -10,6 +10,7 @@ This is the code that we run on our server to interact with our discord
 community, which is where we organize and run all our tournaments.
 
 Join our discord server : https://discord.gg/Q2nDHnn
+
 Sign up to participate in our upcoming tournament: https://goo.gl/forms/4o0596kMqb8o9JWS2
 
 ## Setup
