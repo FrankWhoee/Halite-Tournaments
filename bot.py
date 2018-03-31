@@ -203,6 +203,9 @@ async def on_message(message):
 
             await client.send_message(message.channel, t)
 
+        elif message.content.startswith("!donations"):
+            message = "Donations are used to help support Halite Tournaments. We use your contributions to run our servers and give cash prizes. Donate here: https://www.paypal.me/HaliteTournaments. Donating will give you the **Contributor** role which has access to the Contributors voice channel. More privileges for Contributors will be coming!"
+            await client.send_message(message.channel, message)
         #admin commands
         elif str(message.author) in settings.admins:
             if message.content.startswith("!type"): #make bot type in current channel
