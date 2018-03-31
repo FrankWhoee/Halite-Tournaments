@@ -10,6 +10,7 @@ This is the code that we run on our server to interact with our discord
 community, which is where we organize and run all our tournaments.
 
 Join our discord server : https://discord.gg/Q2nDHnn
+
 ## Setup
 
 The server used for our tournaments is a Google Cloud instance running Debian 9.
