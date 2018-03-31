@@ -17,7 +17,6 @@ sudo apt-get install gcc perl make
 sudo /sbin/vboxconfig
 sudo apt-get upgrade
 rm virtualbox-5.2_5.2.8-121009~Debian~stretch_amd64.deb
-cd bots/ && vagrant up
 
 sudo apt-get install python3 python3-pip
-pip install discord
+sudo pip3 install discord
