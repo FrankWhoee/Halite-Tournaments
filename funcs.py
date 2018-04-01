@@ -4,6 +4,7 @@ import zipfile
 import settings
 import time
 import random
+import asyncio
 
 languages = {'python': ['py', '', 'python3 MyBot.py'],
  'java': ['java', 'javac MyBot.java', 'java MyBot'],
@@ -47,7 +48,7 @@ def str_to_bool(s):
         return False
 
 
-def uploadBot(link, username, fileName):
+async def uploadBot(link, username, fileName):
 
     """
     Function that downloads zip file, unzips it,
@@ -56,7 +57,7 @@ def uploadBot(link, username, fileName):
     """
 
     username = username.replace(' ', '')
-    save = settings.path + '/bots/' + username + '/'
+    save = settings.path + '/env/' + username + '/'
     try:
         os.system('rm -r '+save+" > /dev/null 2>&1")
         os.mkdir(save)
@@ -93,60 +94,63 @@ def uploadBot(link, username, fileName):
 
             compileLog = ""
             if ext != None and found:
-                c, compileLog = compileBot(save, ext, username)
-                if c:
-                    text = 'File bot : ' + fileName + ' ,  submitted, compiled and run successfully! Sending log file...'
-                else:
-                    text = 'File bot : ' + fileName + ' ,  submitted but encountered an error compiling/running! Sending log file...'
+                text, compileLog = await compileBot(save, ext, username)
+                if compileLog != "" :
+                    text = "File bot : "+fileName+", "+text
             elif ext != None and not found:
                 text = 'File bot : ' + fileName + ' conatins a bot file but the language : '+ext+' isn\'t supported!'
             elif ext == None:
                 text = 'File bot : ' + fileName + ' does not contain a **MyBot** file of any type!'
 
             log(text)
-            return False, text, compileLog
+            return text, compileLog
 
-        return False, "File wasn't a .zip file, check the rules!"
+        return "File wasn't a .zip file, check the rules!", ""
+
     except Exception as e:
         s = log(str(e))
-        return True, s, ""
+        return s, ""
 
 
-def compileBot(save, ext, user):
+async def compileBot(save, ext, user):
 
     """
     Function that writes bot name to compilerQueue
     and waits for output.
     """
 
-    compileLog = settings.path+"/bots/out/"+user+".txt"
+    compileLog = ""
     os.system("rm "+compileLog+" > /dev/null 2>&1")
     for k, v in languages.items():
         if ext == v[0]:
             with open(save + "lang.txt", 'w') as f:
                 f.write(v[1] + '\n' + v[2])
-            with open(settings.path + "/bots/compilerQueue.txt", 'a') as q:
-                q.writelines(user)
+            with open(settings.path + "/env/compilerQueue.txt", 'a') as q:
+                q.writelines(user+"\n")
             break
 
     secs = 0
+    text = "took too much time to compile! Max is "+str(settings.compileOut)+"s"
     while secs <= settings.compileOut:
         try:
-            with open(compileLog, "r") as f:
+            with open(settings.path+"/env/out/"+user+".txt", "r") as f:
                 status = f.read().splitlines(True)[-1]
 
             if status.startswith("successful"):
-                return True, compileLog
-            else :
+                text = "submitted, compiled and run successfully! Sending log file..."
+                break
+
+            elif status.startswith("failed") :
+                text = "submitted but encountered an error compiling/running! Sending log file..."
                 break
 
         except FileNotFoundError:
-            time.sleep(1)
+            await asyncio.sleep(1)
             secs += 1
 
-    return False, compileLog
+    return text, compileLog
 
-def battle(p1, p2, width, height, official):
+async def battle(p1, p2, width, height, official):
 
     """
     Battle function to interact with the battle
@@ -165,8 +169,8 @@ def battle(p1, p2, width, height, official):
 
     p1 = p1.replace(' ', '')
     p2 = p2.replace(' ', '')
-    p1Ava = os.path.isdir(settings.path+"/bots/"+p1)
-    p2Ava = os.path.isdir(settings.path+"/bots/"+p2)
+    p1Ava = os.path.isdir(settings.path+"/env/"+p1)
+    p2Ava = os.path.isdir(settings.path+"/env/"+p2)
     log1 = ""
     log2 = ""
     result = ""
@@ -175,25 +179,25 @@ def battle(p1, p2, width, height, official):
     battleName = p1+"VS"+p2
 
     if p1Ava and p2Ava :
-        os.system("rm "+settings.path+"/bots/out/"+battleName+"/* > /dev/null 2>&1")
+        os.system("rm "+settings.path+"/env/out/"+battleName+"/* > /dev/null 2>&1")
         if not official:
-            with open(settings.path+"/bots/"+"runQueue.txt", "a") as f:
-                command = p1+" "+p2+" "+width+" "+height
+            with open(settings.path+"/env/"+"runQueue.txt", "a") as f:
+                command = p1+" "+p2+" "+width+" "+height+"\n"
                 f.writelines(command)
 
             secs = 0
-            while secs <= settings.runOut: #time same as bots/handler.py
-                if os.path.exists(settings.path+"/bots/out/"+battleName+"/battle.log"):
-                    with open(settings.path+"/bots/out/"+battleName+"/battle.log", "r") as l:
+            while secs <= settings.runOut: #time same as env/handler.py
+                if os.path.exists(settings.path+"/env/out/"+battleName+"/battle.log"):
+                    with open(settings.path+"/env/out/"+battleName+"/battle.log", "r") as l:
                         result = "```"+l.read()+"```"
-                    if os.path.exists(settings.path+"/bots/out/"+battleName+"/battle.hlt"):
-                        replay = settings.path+"/bots/out/"+battleName+"/battle.hlt"
-                        for f in os.listdir(settings.path+"/bots/"+p1):
+                    if os.path.exists(settings.path+"/env/out/"+battleName+"/battle.hlt"):
+                        replay = settings.path+"/env/out/"+battleName+"/battle.hlt"
+                        for f in os.listdir(settings.path+"/env/"+p1):
                             if f.endswith(".log"):
-                                log1 = settings.path+"/bots/"+p1+"/"+f
-                        for f in os.listdir(settings.path+"/bots/"+p2):
+                                log1 = settings.path+"/env/"+p1+"/"+f
+                        for f in os.listdir(settings.path+"/env/"+p2):
                             if f.endswith(".log"):
-                                log2 = settings.path+"/bots/"+p2+"/"+f
+                                log2 = settings.path+"/env/"+p2+"/"+f
                             status = "**Battle ran successfully, here is the replay and halite output. Sending log files of players in DM...**"
                     else:
                         status = "**Error while running the battle, here is the halite output.**"
@@ -201,25 +205,25 @@ def battle(p1, p2, width, height, official):
                     return status, result, log1, log2, replay
 
                 else:
-                    time.sleep(1)
+                    await asyncio.sleep(1)
                     secs += 1
 
             status = "**Battle took too much time! Max is "+str(settings.runOut)+"s**"
 
         else:
             runs = 5
-            with open(settings.path+"/bots/runQueue.txt", "a") as f:
-                command = "official "+p1+" "+p2
+            with open(settings.path+"/env/runQueue.txt", "a") as f:
+                command = "official "+p1+" "+p2+"\n"
                 f.writelines(command)
 
             secs = 0
             while secs <= settings.runOut*runs:
-                if os.path.exists(settings.path+"/bots/out/"+battleName+"/battle.log"):
-                    with open(settings.path+"/bots/out/"+battleName+"/battle.log", "r") as l:
+                if os.path.exists(settings.path+"/env/out/"+battleName+"/battle.log"):
+                    with open(settings.path+"/env/out/"+battleName+"/battle.log", "r") as l:
                         result = "```"+l.read()+"```"
 
-                    if os.path.exists(settings.path+"/bots/out/"+battleName+"/"+str(runs)+".hlt"):
-                        replay = settings.path+"/bots/out/"+battleName+"/match.zip"
+                    if os.path.exists(settings.path+"/env/out/"+battleName+"/"+str(runs)+".hlt"):
+                        replay = settings.path+"/env/out/"+battleName+"/match.zip"
                         status = "**Match ran successfully, here are the results and the replays.**"
                     else:
                         status = "**Error while running the match, here is the halite output.**"
@@ -227,7 +231,7 @@ def battle(p1, p2, width, height, official):
                     return status, result, log1, log2, replay
 
                 else:
-                    time.sleep(1)
+                    await asyncio.sleep(1)
                     secs += 1
 
             status = "**Battle took too much time! Max is "+str(settings.runOut*runs)+"s**"

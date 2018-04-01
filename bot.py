@@ -15,7 +15,8 @@ commands = {"!help":"Show this message",
             "!matches":"Print upcoming matches, tag a user after to check his upcoming matches",
             "!submissions":"Check if submissions are opened/closed and when they close/open",
             "!languages":"Check supported languages for submissions, add a language name to know how it's compiled/run e.g. !language python",
-            "!battle":"Run a match between two players, !battle [p1] [p2] [height map] [width map]"}
+            "!battle":"Run a match between two players, !battle [p1] [p2] [height map] [width map]",
+            "!donations":"Get infos about donations"}
 
 adminCommands = {"!subs":"!subs True/False opens or closes submissions",
                  "!brk":"To add as a comment with the brackets image to update it",
@@ -31,7 +32,6 @@ async def on_ready(): #startup
     print("Bot "+client.user.name+" ready to operate!")
     print("-------")
 
-
 @client.event
 async def on_message(message):
     try :
@@ -46,16 +46,12 @@ async def on_message(message):
                 else:
                     try:
                         await client.send_message(message.channel, "`Submitting, compiling and testing your bot...` "+message.author.mention)
-                        exc, response, compileLog = funcs.uploadBot(message.attachments[0].get('url'), str(message.author), message.attachments[0].get('filename'))
-                        #exec boolean variable to check success, response string to send, compileLog log file of compiler
+                        response, compileLog = await funcs.uploadBot(message.attachments[0].get('url'), str(message.author), message.attachments[0].get('filename'))
                         await client.delete_message(message)
-                        if not exc and compileLog != "": #if compiled and run successfully
-                            await client.send_message(message.channel, "`"+response+"` "+message.author.mention)
+                        await client.send_message(message.channel, "`"+response+"` "+message.author.mention)
+                        if compileLog != "": #if compiled and run successfully
                             await client.send_message(message.author, "**Here your compile and run log for yout bot submission!**")
                             await client.send_file(message.author, compileLog)
-                        else:
-                            await client.send_message(message.channel, "`Error while uploading the bot file! Logging the error, check your file and if needed DM Splinter or Frank!` "+message.author.mention)
-                            await client.send_message(discord.utils.get(client.get_all_channels(), server__name=settings.serverName, name='halite'), response)
 
                     except IndexError : #no attachments present
                         await client.send_message(message.channel, "`No attachment present!` "+message.author.mention)
@@ -143,7 +139,7 @@ async def on_message(message):
                         height = "160"
 
                     await client.send_message(message.channel, "*Running battle...* <:logo:416779058924355596>")
-                    status, result, log1, log2, replay = funcs.battle(p1, p2, width, height, False)
+                    status, result, log1, log2, replay = await funcs.battle(p1, p2, width, height, False)
                     await client.send_message(message.channel, status)
 
                     if result != "": #if we have an output
@@ -209,8 +205,8 @@ async def on_message(message):
             await client.send_message(message.channel, t)
 
         elif message.content.startswith("!donations"):
-            message = "Donations are used to help support Halite Tournaments. We use your contributions to run our servers and give cash prizes. Donate here: https://www.paypal.me/HaliteTournaments. Donating will give you the **Contributor** role which has access to the Contributors voice channel. More privileges for Contributors will be coming!"
-            await client.send_message(message.channel, message)
+            text = "Donations are used to help support Halite Tournaments. We use your contributions to run our servers and give cash prizes. Donate here: https://www.paypal.me/HaliteTournaments. Donating will give you the **Contributor** role which has access to the Contributors voice channel. More privileges for Contributors will be coming!"
+            await client.send_message(message.channel, text)
         #admin commands
         elif str(message.author) in settings.admins:
             if message.content.startswith("!type"): #make bot type in current channel
@@ -225,7 +221,7 @@ async def on_message(message):
                         p2 = str(message.mentions[1])
 
                         await client.send_message(message.channel, "*Running match...*")
-                        status, result, _, _, replay = funcs.battle(p1, p2, "", "", True)
+                        status, result, _, _, replay = await funcs.battle(p1, p2, "", "", True)
                         await client.send_message(message.channel, status)
 
                         if result != "": #if we have an output
@@ -289,7 +285,7 @@ async def on_message(message):
                         with open("settings.json", "w") as f:
                             json.dump(g, f, indent="\t")
 
-                        with open("bots/run.txt", "w") as f:
+                        with open("env/run.txt", "w") as f:
                             if boo:
                                 f.write("1")
                             else :
@@ -354,5 +350,13 @@ async def on_member_join(member):
     funcs.log("Member joined : "+str(member))
     await client.send_message(discord.utils.get(client.get_all_channels(), server__name=settings.serverName, name='general'),
         "Welcome "+member.mention+" to Halite Tournaments! Check out the section "+channel.mention+" for information about the upcoming tournaments! <:logo:416779058924355596>")
+
+if settings.token == "":
+    token = str(input("Insert token for bot : "))
+    settings.token = token
+
+if settings.serverName == "":
+    name = str(input("Insert name of operating server : "))
+    settings.serverName = name
 
 client.run(settings.token)
